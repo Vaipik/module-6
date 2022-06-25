@@ -2,7 +2,7 @@ from pathlib import Path
 import sys
 import shutil
 
-
+# Creating translation table
 CYRILLIC_SYMBOLS = "абвгдеёжзийклмнопрстуфхцчшщъыьэюяєіїґ"
 TRANSLATION = ("a", "b", "v", "g", "d", "e", "e", "j", "z", "i", "j", "k", "l", "m", "n", "o", "p", "r", "s", "t", "u",
             "f", "h", "ts", "ch", "sh", "sch", "", "y", "", "e", "yu", "ya", "je", "i", "ji", "g")
@@ -14,8 +14,8 @@ for c, l in zip(CYRILLIC_SYMBOLS, TRANSLATION):
     TRANS[ord(c.upper())] = l.upper()
 
 
-
 def file_replacement(elem, folders_pathes, extensions, files_in_folder):
+
 
     images = ("JPEG", "PNG", "JPG", "SVG")
     video = ("AVI", "MP4", "MOV", "MKV")
@@ -33,6 +33,7 @@ def file_replacement(elem, folders_pathes, extensions, files_in_folder):
             
             shutil.unpack_archive(elem, f"{folders_pathes[category]}\{element_name}")
             elem_path.unlink()
+
         else:
             elem_path.replace(f"{folders_pathes[category]}\{element_name}")
 
@@ -62,6 +63,7 @@ def file_replacement(elem, folders_pathes, extensions, files_in_folder):
         else:
             extensions['unknown'].add('no extension')
     
+
 def folders_creation(path, folders_tuple):
 
     folders = {}
@@ -76,6 +78,7 @@ def folders_creation(path, folders_tuple):
 
     return folders
 
+
 def normalize(name):
 
     name = name.translate(TRANS)
@@ -87,6 +90,7 @@ def normalize(name):
     
     return name
 
+
 def recursion_directory(folder_path, folders_pathes, extensions, files_in_folder):
 
     for elem in folder_path.iterdir():
@@ -95,9 +99,15 @@ def recursion_directory(folder_path, folders_pathes, extensions, files_in_folder
             file_replacement(elem, folders_pathes, extensions, files_in_folder)
 
         elif elem.is_dir():
-            
+     
             elem_path = elem.absolute()
+            folder_name = normalize(elem_path.name)
+            if folder_name != elem_path.name:
+                folder_name = normalize(elem_path.name)
+                elem_path = elem_path.replace(elem_path.with_stem(folder_name))
+
             recursion_directory(elem_path, folders_pathes, extensions, files_in_folder)
+
             try:
                 elem_path.rmdir()
             except OSError:
@@ -106,6 +116,7 @@ def recursion_directory(folder_path, folders_pathes, extensions, files_in_folder
 
 def main():
     
+
     # Перелік заданих тек
     folders = ("archives", "audio", "documents", "images", "video")
     # Словник для списку знайдених розширень
@@ -146,7 +157,16 @@ def main():
                     
                     # Якщо теки немає в заданих, то присвоюємо цій теці поточний шлях та розбираємо 
                     folder_path = elem.absolute()
-                    recursion_directory(folder_path, folders_pathes, extensions, files_in_folder)
+                    folder_name = normalize(folder_path.stem)
+                    if folder_name != folder_path.stem:
+
+                        folder_name = normalize(folder_path.stem)
+                        folder_path = folder_path.replace(folder_path.with_stem(folder_name))
+                    
+                    try:
+                        recursion_directory(folder_path, folders_pathes, extensions, files_in_folder)
+                    except:
+                        pass
                     # Якщо в теці знаходиться файл з невідомим розширенням то не видаляємо її
                     try:
                         folder_path.rmdir()
@@ -177,8 +197,7 @@ def main():
         else:
             print(f"{k:<10} files haven't been found")
 
+
 if __name__ == "__main__":
     main()
  
-
-
